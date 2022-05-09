@@ -3,12 +3,15 @@ import socket
 
 class receiver:
 
+    # Initialization
     def __init__(self, port):
         self.socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         self.socket.settimeout(50)
         self.socket.bind(('127.0.0.1', port))
         self.last_seq = 1
 
+    # Receiving and checking the message
+    # If message is currpoted, ask for resend
     def recv_msg(self):
         i = 0
         flag = True
@@ -27,13 +30,14 @@ class receiver:
         if flag:
             return ""
 
+        # If the client want to close the connection
         if msg[3:].decode('utf-8') == "Chal Beta Agla Laga":
             self.close()
             raise Exception("Connection Closed From the Sender")
 
         return msg[3:].decode('utf-8')
             
-
+    # Check the integrity with the help of checksum
     def check_msg(self, data):
         check = 0
         for byte in data[3:]:
@@ -42,10 +46,11 @@ class receiver:
             return True
         return False
             
-
+    # Vanilla Receive system
     def recv(self):
         return self.recv_msg()
 
+    # Listen and connect with the client
     def listen(self):
         msg, addr = self.socket.recvfrom(1024)
         if self.check_msg(msg):
@@ -54,13 +59,14 @@ class receiver:
              print("Connection Established With : " + str(addr))
         self.socket.sendto(str(self.last_seq).encode(), addr)
 
+    # Close the connection
     def close(self):
         self.socket.close()
         
     
 
 
-
+# Infinite loop to receive the message
 shit = receiver(12345)
 shit.listen()
 
